@@ -12,6 +12,8 @@ Designed with simplicity, elegance, and fun in mind – now available on the App
 - **GeometryReader**: Handles adaptive layouts for iPhone and iPad
 - **Settings**: Countdown timer, date display, live filters, save to gallery
 
+[![Download on the App Store](https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg)](https://apps.apple.com/app/id6744557942)
+
 
 ![ok](https://github.com/user-attachments/assets/9eefa6f9-44f3-4cff-91b3-99cf14336359)
 
