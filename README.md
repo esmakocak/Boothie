@@ -3,7 +3,6 @@ Boothie is a minimal photo booth app built with SwiftUI, allowing users to creat
 Designed with simplicity, elegance, and fun in mind – now available on the App Store for iPhone & iPad.
 
 ### 👩🏻‍💻 Features & Technologies 
-
 - **AVFoundation**: Live camera preview, real-time capture. 
 - **CoreImage**: Applies stylish filters and effects.
 - **AppStorage**: Manages persistent user settings like countdown and date display.
