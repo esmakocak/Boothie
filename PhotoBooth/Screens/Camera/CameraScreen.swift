@@ -45,6 +45,23 @@ struct CameraScreen: View {
                         .padding(.top, 32)
                     Spacer()
                     
+                    // Flash Toggle Button
+                    Button(action: {
+                        viewModel.toggleTorch()
+                    }) {
+                        Image(systemName: viewModel.isFlashEnabled ? "bolt.fill" : "bolt.slash.fill")
+                            .font(.system(size: UIDevice.isPad ? 32 : 24))
+                            .foregroundColor(viewModel.isFlashEnabled ? .yellow : Color("sugarPink"))
+                            .padding(UIDevice.isPad ? 16 : 12)
+                            .background(Color("lightPink"))
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color("sugarPink"), lineWidth: 1)
+                            )
+                    }
+                    .padding(.top, 32)
+                    
                     // Camera Toggle Button
                     Button(action: {
                         viewModel.switchCamera()
@@ -84,12 +101,7 @@ struct CameraScreen: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 20))
                                 }
                             }
-                            /*
-                             SİLME İŞLEMİNDEN SONRA BURDA BU KOD KALACAK !
-                             
-                            CameraPreviewView(session: viewModel.session)
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
-                             */
+
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 20)
@@ -148,45 +160,31 @@ struct CameraScreen: View {
                 .offset(y: -80)
 
                 // Start Button
-                if !viewModel.isCapturing {
-                    Button(action: {
-                        viewModel.startCountdown()
-                    }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: UIDevice.isPad ? 32 : 24))
-                            Text("Start")
-                                .font(.custom("Didot-Bold", size: UIDevice.isPad ? 28 : 22))
-                        }
-                        .foregroundColor(Color("sugarPink"))
-                        .padding(.horizontal, UIDevice.isPad ? 40 : 32)
-                        .padding(.vertical, UIDevice.isPad ? 20 : 16)
-                        .background(Color("lightPink"))
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color("sugarPink"), lineWidth: 1)
-                        )
+                Button(action: {
+                    viewModel.startCountdown()
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(Color("sugarPink"))
+                            .frame(width: UIDevice.isPad ? 100 : 70, height: UIDevice.isPad ? 100 : 70)
+
+                        Circle()
+                            .stroke(Color("lightPink"), lineWidth: 5)
+                            .frame(width: UIDevice.isPad ? 100 : 70, height: UIDevice.isPad ? 100 : 70)
+
+                        Circle()
+                            .stroke(Color("sugarPink"), lineWidth: 5)
+                            .frame(width: UIDevice.isPad ? 106 : 76, height: UIDevice.isPad ? 106 : 76)
                     }
-                    .padding(.bottom, UIDevice.isPad ? 60 : 40)
                 }
+                .disabled(viewModel.isCapturing)
+                .opacity(viewModel.isCapturing ? 0.5 : 1)
+                .offset(y: UIDevice.isPad ? -60 : -40)
 
                 Spacer()
             }
         }
         
-        // DAHA SONRA BURA KALACAK ! 
-        /*
-        .onAppear {
-            requestCameraAccess { granted in
-                if granted {
-                    viewModel.startCountdown()
-                } else {
-                    showCameraAlert = true
-                }
-            }
-        }
-         */
         
         // DAHA SONRA SİL !
         .onAppear {
@@ -234,17 +232,6 @@ struct CameraScreen: View {
     CameraScreen(path: .constant(NavigationPath()))
 }
 
-
-//// DAHA SONRA SİL
-//extension CameraViewModel {
-//    static var preview: CameraViewModel {
-//        let vm = CameraViewModel()
-//        vm.countdown = 2
-//        vm.currentShot = 1
-//        vm.isCapturing = true
-//        return vm
-//    }
-//}
 
 struct CameraPreviewPlaceholder: View {
     var body: some View {

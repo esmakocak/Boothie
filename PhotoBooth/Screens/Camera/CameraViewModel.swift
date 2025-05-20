@@ -17,6 +17,7 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     @Published var navigateToOutput = false
     @Published var capturedImages: [UIImage] = []
     @Published var cameraPosition: AVCaptureDevice.Position = .front
+    @Published var isFlashEnabled: Bool = false
     
     private let output = AVCaptureVideoDataOutput()
     private let captureQueue = DispatchQueue(label: "captureQueue")
@@ -168,5 +169,27 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
         
         // Restart session
         startSession()
+    }
+    
+    func toggleTorch() {
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition),
+              device.hasTorch else {
+            print("Torch not available.")
+            return
+        }
+
+        do {
+            try device.lockForConfiguration()
+            if device.torchMode == .on {
+                device.torchMode = .off
+                isFlashEnabled = false
+            } else {
+                try device.setTorchModeOn(level: 1.0)
+                isFlashEnabled = true
+            }
+            device.unlockForConfiguration()
+        } catch {
+            print("Torch could not be used: \(error)")
+        }
     }
 }
