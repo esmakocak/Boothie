@@ -1,6 +1,7 @@
 import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import UIKit
 
 struct OutputScreen: View {
     let images: [UIImage]
@@ -15,6 +16,8 @@ struct OutputScreen: View {
     @AppStorage("showDate") private var showDate: Bool = true
     @State private var isExiting = false
     @State private var offsetX: CGFloat = 0
+    @State private var isWhatsAppSharing = false
+    @State private var whatsAppNotInstalledAlert = false
     
     var body: some View {
         ZStack {
@@ -85,6 +88,51 @@ struct OutputScreen: View {
                                 RoundedRectangle(cornerRadius: 10)
                                     .stroke(Color("sugarPink"), lineWidth: 1)
                             )
+                    }
+                    
+                    // 📱 WHATSAPP
+                    Button(action: {
+                        withAnimation { isWhatsAppSharing = true }
+                        
+                        // Use UIApplication.shared.windows approach for iOS 15+
+                        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                           let rootViewController = windowScene.windows.first?.rootViewController {
+                            let success = viewModel.shareViaWhatsApp(
+                                from: filteredImages,
+                                isDarkFrame: isDarkFrame,
+                                from: rootViewController
+                            )
+                            
+                            if !success {
+                                whatsAppNotInstalledAlert = true
+                            }
+                        }
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            withAnimation {
+                                isWhatsAppSharing = false
+                            }
+                        }
+                    }) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color("lightPink"))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color("sugarPink"), lineWidth: 1)
+                                )
+                                .frame(width: UIDevice.isPad ? 52 : 44, height: UIDevice.isPad ? 52 : 44)
+                            
+                            if isWhatsAppSharing {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: Color("sugarPink")))
+                            } else {
+                                // WhatsApp icon
+                                Image(systemName: "message.fill")
+                                    .font(.system(size: UIDevice.isPad ? 26 : 18, weight: .bold))
+                                    .foregroundColor(Color("sugarPink"))
+                            }
+                        }
                     }
                     
                     // 📸 COLLECT
@@ -178,7 +226,7 @@ struct OutputScreen: View {
                     }
                 }
                 .padding(.bottom, 60)
-                .offset(y: -60) 
+                .offset(y: -60)
             }
             .offset(x: offsetX)
             .opacity(isExiting ? 0.4 : 1)
@@ -224,6 +272,11 @@ struct OutputScreen: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .alert("WhatsApp Not Installed", isPresented: $whatsAppNotInstalledAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Please install WhatsApp to use this feature.")
+        }
     }
     
     func formattedDate() -> String {
@@ -274,4 +327,3 @@ extension UIImage {
         self.init(cgImage: image.cgImage!)
     }
 }
-

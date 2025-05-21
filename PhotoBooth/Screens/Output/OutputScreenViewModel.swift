@@ -8,10 +8,13 @@
 import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import UIKit
 
 @MainActor
 class OutputScreenViewModel: ObservableObject {
     @Published var showSavedAlert = false
+    // Keep a strong reference to the document controller
+    private var documentInteractionController: UIDocumentInteractionController?
 
     func saveCombinedStrip(from images: [UIImage], isDarkFrame: Bool) {
         guard let photostrip = createPhotoStrip(from: images, isDarkFrame: isDarkFrame) else {
@@ -21,6 +24,41 @@ class OutputScreenViewModel: ObservableObject {
 
         UIImageWriteToSavedPhotosAlbum(photostrip, nil, nil, nil)
         showSavedAlert = true
+    }
+
+    // Updated WhatsApp sharing function
+    func shareViaWhatsApp(from images: [UIImage], isDarkFrame: Bool, from viewController: UIViewController) -> Bool {
+        guard let photostrip = createPhotoStrip(from: images, isDarkFrame: isDarkFrame) else {
+            print("❌ Failed to create image for sharing")
+            return false
+        }
+        
+        // Save image temporarily
+        if let imageData = photostrip.jpegData(compressionQuality: 0.9) {
+            let tempDirectory = FileManager.default.temporaryDirectory
+            let tempFile = tempDirectory.appendingPathComponent("photostrip_\(UUID().uuidString).jpg")
+            
+            do {
+                try imageData.write(to: tempFile)
+                
+                // Create document interaction controller and keep a strong reference
+                documentInteractionController = UIDocumentInteractionController(url: tempFile)
+                documentInteractionController?.uti = "net.whatsapp.image"
+                
+                // Present the share sheet
+                if documentInteractionController?.presentOpenInMenu(from: CGRect.zero, in: viewController.view, animated: true) == true {
+                    return true
+                } else {
+                    // If presentOpenInMenu returns false, WhatsApp might not be available
+                    return false
+                }
+            } catch {
+                print("❌ Error saving temporary file: \(error)")
+                return false
+            }
+        }
+        
+        return false
     }
 
     func applyEffect(image: UIImage, effect: OutputEffect) -> UIImage {
