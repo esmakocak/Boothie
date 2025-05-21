@@ -118,7 +118,8 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
                 let context = CIContext()
 
                 if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
-                    let image = UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: .leftMirrored)
+                    let orientation: UIImage.Orientation = self.cameraPosition == .front ? .leftMirrored : .right
+                    let image = UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: orientation)
                     self.capturedImages.append(image)
                 }
             }
@@ -128,6 +129,16 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
                     self.currentShot += 1
                     self.startCountdown()
                 } else {
+                    if self.cameraPosition == .back {
+                        if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                           device.hasTorch {
+                            try? device.lockForConfiguration()
+                            device.torchMode = .off
+                            device.unlockForConfiguration()
+                        }
+                    }
+                    self.isFlashEnabled = false
+                    
                     self.isCapturing = false
                     self.path.append(Route.output(images: self.capturedImages))
                 }
@@ -144,42 +155,39 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     }
 
     func switchCamera() {
-        // Stop the session before making changes
         session.stopRunning()
-        
-        // Begin configuration
         session.beginConfiguration()
-        
-        // Remove existing input
+
         if let currentInput = currentInput {
             session.removeInput(currentInput)
         }
-        
-        // Toggle camera position
+
         cameraPosition = cameraPosition == .front ? .back : .front
-        
-        // Get new camera device
+
         guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera,
-                                                    for: .video,
-                                                    position: cameraPosition),
+                                                       for: .video,
+                                                       position: cameraPosition),
               let newInput = try? AVCaptureDeviceInput(device: newCamera) else {
-            print("❌ Failed to get new camera device")
+            print("Failed to get new camera device")
             session.commitConfiguration()
             startSession()
             return
         }
-        
-        // Add new input
+
         if session.canAddInput(newInput) {
             session.addInput(newInput)
             currentInput = newInput
         }
-        
-        // Commit configuration
+
         session.commitConfiguration()
-        
-        // Restart session
         startSession()
+
+        // 🔥 Yeni ekleme: Flash durumu korunarak yeniden ayarlanıyor
+        if isFlashEnabled {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.reapplyTorchIfNeeded()
+            }
+        }
     }
     
     func toggleTorch() {
@@ -209,7 +217,21 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
         }
     }
     
+    func reapplyTorchIfNeeded() {
+        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition),
+              device.hasTorch else {
+            return
+        }
 
+        do {
+            try device.lockForConfiguration()
+            try device.setTorchModeOn(level: 1.0)
+            device.unlockForConfiguration()
+        } catch {
+            print("⚠️ Could not reapply torch: \(error)")
+        }
+    }
+    
     func triggerFrontFlashEffect(completion: @escaping () -> Void) {
         // 1. Parlaklığı kaydet
         let originalBrightness = UIScreen.main.brightness
