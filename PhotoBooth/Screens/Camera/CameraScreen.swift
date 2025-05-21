@@ -183,6 +183,13 @@ struct CameraScreen: View {
 
                 Spacer()
             }
+
+            if viewModel.showFrontFlashOverlay {
+                Color.white
+                    .opacity(1.0)
+                    .ignoresSafeArea()
+                    .zIndex(100)
+            }
         }
         
         

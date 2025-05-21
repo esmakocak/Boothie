@@ -7,6 +7,8 @@
 
 import SwiftUI
 import AVFoundation
+import UIKit
+
 
 class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     @AppStorage("countdownSeconds") private var countdownSetting: Int = 3
@@ -18,6 +20,7 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     @Published var capturedImages: [UIImage] = []
     @Published var cameraPosition: AVCaptureDevice.Position = .front
     @Published var isFlashEnabled: Bool = false
+    @Published var showFrontFlashOverlay: Bool = false
     
     private let output = AVCaptureVideoDataOutput()
     private let captureQueue = DispatchQueue(label: "captureQueue")
@@ -95,31 +98,39 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     }
     
     func simulatePhotoCapture() {
+        if cameraPosition == .front && isFlashEnabled {
+            triggerFrontFlashEffect {
+                self.captureCurrentFrame()
+            }
+        } else {
+            self.captureCurrentFrame()
+        }
+    }
+
+    private func captureCurrentFrame() {
         self.showFlash = true
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             self.showFlash = false
 
-            // Ekran görüntüsünü al
             if let buffer = self.latestPixelBuffer {
                 let ciImage = CIImage(cvPixelBuffer: buffer)
                 let context = CIContext()
 
                 if let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
                     let image = UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: .leftMirrored)
-
                     self.capturedImages.append(image)
                 }
             }
-        }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            if self.currentShot < self.totalShots {
-                self.currentShot += 1
-                self.startCountdown()
-            } else {
-                self.isCapturing = false
-                self.path.append(Route.output(images: self.capturedImages))
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                if self.currentShot < self.totalShots {
+                    self.currentShot += 1
+                    self.startCountdown()
+                } else {
+                    self.isCapturing = false
+                    self.path.append(Route.output(images: self.capturedImages))
+                }
             }
         }
     }
@@ -172,24 +183,48 @@ class CameraViewModel: NSObject, ObservableObject, AVCaptureVideoDataOutputSampl
     }
     
     func toggleTorch() {
-        guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition),
-              device.hasTorch else {
-            print("Torch not available.")
-            return
-        }
-
-        do {
-            try device.lockForConfiguration()
-            if device.torchMode == .on {
-                device.torchMode = .off
-                isFlashEnabled = false
-            } else {
-                try device.setTorchModeOn(level: 1.0)
-                isFlashEnabled = true
+        if cameraPosition == .front {
+            // Just toggle the simulated flash flag
+            isFlashEnabled.toggle()
+        } else {
+            guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+                  device.hasTorch else {
+                print("Torch not available.")
+                return
             }
-            device.unlockForConfiguration()
-        } catch {
-            print("Torch could not be used: \(error)")
+
+            do {
+                try device.lockForConfiguration()
+                if device.torchMode == .on {
+                    device.torchMode = .off
+                    isFlashEnabled = false
+                } else {
+                    try device.setTorchModeOn(level: 1.0)
+                    isFlashEnabled = true
+                }
+                device.unlockForConfiguration()
+            } catch {
+                print("Torch could not be used: \(error)")
+            }
+        }
+    }
+    
+
+    func triggerFrontFlashEffect(completion: @escaping () -> Void) {
+        // 1. Parlaklığı kaydet
+        let originalBrightness = UIScreen.main.brightness
+        
+        // 2. Ekranı beyaza boya
+        showFrontFlashOverlay = true
+        UIScreen.main.brightness = 1.0
+
+        // 3. Kısa bir gecikme (kamera ışığı yansısın)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            completion()
+
+            // 4. Ekranı eski haline döndür
+            UIScreen.main.brightness = originalBrightness
+            self.showFrontFlashOverlay = false
         }
     }
 }
