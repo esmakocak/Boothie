@@ -16,7 +16,7 @@ class OutputScreenViewModel: ObservableObject {
     // Keep a strong reference to the document controller
     private var documentInteractionController: UIDocumentInteractionController?
 
-    func saveCombinedStrip(from images: [UIImage], isDarkFrame: Bool) {
+    func saveCombinedStrip(from images: [UIImage], isDarkFrame: Bool, frameColor: Color = .white) {
         guard let photostrip = createPhotoStrip(from: images, isDarkFrame: isDarkFrame) else {
             print("❌ Görsel oluşturulamadı")
             return
@@ -27,7 +27,7 @@ class OutputScreenViewModel: ObservableObject {
     }
 
     // Updated WhatsApp sharing function
-    func shareViaWhatsApp(from images: [UIImage], isDarkFrame: Bool, from viewController: UIViewController) -> Bool {
+    func shareViaWhatsApp(from images: [UIImage], isDarkFrame: Bool, frameColor: Color = .white, from viewController: UIViewController) -> Bool {
         guard let photostrip = createPhotoStrip(from: images, isDarkFrame: isDarkFrame) else {
             print("❌ Failed to create image for sharing")
             return false
@@ -67,6 +67,9 @@ class OutputScreenViewModel: ObservableObject {
         let outputImage: CIImage?
 
         switch effect {
+        case .original:
+            return image
+            
         case .sepia:
             let mono = CIFilter.photoEffectMono()
             mono.inputImage = ciImage
@@ -75,10 +78,6 @@ class OutputScreenViewModel: ObservableObject {
             sepia.inputImage = mono.outputImage
             sepia.intensity = 0.6
 
-//            let exposure = CIFilter.exposureAdjust()
-//            exposure.inputImage = sepia.outputImage
-//            exposure.ev = 0.2
-//
             let bloom = CIFilter.bloom()
             bloom.inputImage = sepia.outputImage
             bloom.intensity = 0.3
@@ -177,6 +176,26 @@ class OutputScreenViewModel: ObservableObject {
             vignette.radius = 10
 
             outputImage = vignette.outputImage
+            
+        case .vintage:
+            let sepia = CIFilter.sepiaTone()
+            sepia.inputImage = ciImage
+            sepia.intensity = 0.5
+            
+            guard let sepiaOutput = sepia.outputImage else { return image }
+            
+            let colorControls = CIFilter.colorControls()
+            colorControls.inputImage = sepiaOutput
+            colorControls.saturation = 1.2
+            colorControls.brightness = 0.05
+            colorControls.contrast = 1.1
+            
+            outputImage = colorControls.outputImage
+            
+        case .noir:
+            let noir = CIFilter.photoEffectNoir()
+            noir.inputImage = ciImage
+            outputImage = noir.outputImage
         }
 
         if let outputImage,
@@ -187,7 +206,7 @@ class OutputScreenViewModel: ObservableObject {
         return image
     }
 
-    private func createPhotoStrip(from images: [UIImage], isDarkFrame: Bool) -> UIImage? {
+    func createPhotoStrip(from images: [UIImage], isDarkFrame: Bool) -> UIImage? {
         let photoSize = CGSize(width: 220, height: 220)
         let spacing: CGFloat = 16
         let topPadding: CGFloat = 20
@@ -252,5 +271,21 @@ class OutputScreenViewModel: ObservableObject {
         let x = frame.origin.x + (frame.width - width) / 2
         let y = frame.origin.y + (frame.height - height) / 2
         image.draw(in: CGRect(x: x, y: y, width: width, height: height))
+    }
+}
+
+// Extension to convert SwiftUI Color to components
+extension Color {
+    var components: (red: CGFloat, green: CGFloat, blue: CGFloat, opacity: CGFloat) {
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var o: CGFloat = 0
+        
+        guard UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &o) else {
+            return (0, 0, 0, 0)
+        }
+        
+        return (r, g, b, o)
     }
 }
