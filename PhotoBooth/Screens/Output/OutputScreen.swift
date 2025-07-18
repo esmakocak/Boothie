@@ -254,7 +254,7 @@ struct OutputScreen: View {
                                                     .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
                                                 
                                                 // Sample image with effect
-                                                if let sampleImage = filteredImages.first {
+                                                if let sampleImage = images.first {
                                                     Image(uiImage: viewModel.applyEffect(image: sampleImage, effect: effect))
                                                         .resizable()
                                                         .aspectRatio(contentMode: .fill)
