@@ -16,8 +16,8 @@ class OutputScreenViewModel: ObservableObject {
     // Keep a strong reference to the document controller
     private var documentInteractionController: UIDocumentInteractionController?
 
-    func saveCombinedStrip(from images: [UIImage], isDarkFrame: Bool, frameColor: Color = .white) {
-        guard let photostrip = createPhotoStrip(from: images, isDarkFrame: isDarkFrame) else {
+    func saveCombinedStrip(from images: [UIImage], frameColor: Color = .white) {
+        guard let photostrip = createPhotoStrip(from: images, frameColor: frameColor) else {
             print("❌ Görsel oluşturulamadı")
             return
         }
@@ -27,8 +27,8 @@ class OutputScreenViewModel: ObservableObject {
     }
 
     // Updated WhatsApp sharing function
-    func shareViaWhatsApp(from images: [UIImage], isDarkFrame: Bool, frameColor: Color = .white, from viewController: UIViewController) -> Bool {
-        guard let photostrip = createPhotoStrip(from: images, isDarkFrame: isDarkFrame) else {
+    func shareViaWhatsApp(from images: [UIImage], frameColor: Color = .white, from viewController: UIViewController) -> Bool {
+        guard let photostrip = createPhotoStrip(from: images, frameColor: frameColor) else {
             print("❌ Failed to create image for sharing")
             return false
         }
@@ -206,7 +206,7 @@ class OutputScreenViewModel: ObservableObject {
         return image
     }
 
-    func createPhotoStrip(from images: [UIImage], isDarkFrame: Bool) -> UIImage? {
+    func createPhotoStrip(from images: [UIImage], frameColor: Color = .white) -> UIImage? {
         let photoSize = CGSize(width: 220, height: 220)
         let spacing: CGFloat = 16
         let topPadding: CGFloat = 20
@@ -225,7 +225,7 @@ class OutputScreenViewModel: ObservableObject {
         // Arka plan
         let backgroundRect = CGRect(origin: .zero, size: size)
         let backgroundPath = UIBezierPath(roundedRect: backgroundRect, cornerRadius: cardCornerRadius)
-        (isDarkFrame ? UIColor.black : UIColor.white).setFill()
+        UIColor(frameColor).setFill()
         backgroundPath.fill()
 
         var yOffset = topPadding
@@ -252,7 +252,7 @@ class OutputScreenViewModel: ObservableObject {
 
             let attributes: [NSAttributedString.Key: Any] = [
                 .font: UIFont(name: "SnellRoundhand", size: 20) ?? UIFont.systemFont(ofSize: 20),
-                .foregroundColor: isDarkFrame ? UIColor.white : UIColor.black,
+                .foregroundColor: UIColor.black, // Always black for date text
                 .paragraphStyle: paragraph
             ]
 

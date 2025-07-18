@@ -23,7 +23,7 @@ struct OutputScreen: View {
     @State private var photostrip: UIImage? = nil
     
     // Frame colors
-    private let frameColors: [Color] = [.white, .black, Color("sugarPink"), Color.gray, Color.brown]
+    private let frameColors: [Color] = [.white, .black,  Color.lightPink, Color.sugarPink, Color.purple.opacity(0.7) ,Color.teal.opacity(0.7)]
     @State private var selectedFrameColor: Color = .white
     
     // Device detection
@@ -83,7 +83,7 @@ struct OutputScreen: View {
                             Button(action: {
                                 withAnimation { isSaving = true }
                                 
-                                viewModel.saveCombinedStrip(from: filteredImages, isDarkFrame: isDarkFrame)
+                                viewModel.saveCombinedStrip(from: filteredImages, frameColor: selectedFrameColor)
                                 
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
                                     withAnimation {
@@ -123,7 +123,7 @@ struct OutputScreen: View {
                                    let rootViewController = windowScene.windows.first?.rootViewController {
                                     let success = viewModel.shareViaWhatsApp(
                                         from: filteredImages,
-                                        isDarkFrame: isDarkFrame,
+                                        frameColor: selectedFrameColor,
                                         from: rootViewController
                                     )
                                     
@@ -304,7 +304,7 @@ struct OutputScreen: View {
                                             .frame(width: 40, height: 40)
                                             .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
                                         
-                                        if isDarkFrame && color == .black || !isDarkFrame && color == .white {
+                                        if selectedFrameColor == color {
                                             Circle()
                                                 .stroke(Color("sugarPink"), lineWidth: 2)
                                                 .frame(width: 46, height: 46)
@@ -316,13 +316,14 @@ struct OutputScreen: View {
                                     }
                                     .onTapGesture {
                                         withAnimation {
-                                            isDarkFrame = (color == .black)
+                                            selectedFrameColor = color
                                         }
                                     }
                                 }
                             }
                             .padding(.horizontal, 20)
                             .padding(.vertical, 15)
+                            .frame(maxWidth: .infinity)
                             .frame(height: 110)
                             .background(Color.white.opacity(0.8))
                             .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -374,6 +375,9 @@ struct OutputScreen: View {
         .onChange(of: isDarkFrame) { _ in
             updatePhotostrip()
         }
+        .onChange(of: selectedFrameColor) { _ in
+            updatePhotostrip()
+        }
         .navigationBarBackButtonHidden(true)
         .alert("WhatsApp Not Installed", isPresented: $whatsAppNotInstalledAlert) {
             Button("OK", role: .cancel) { }
@@ -395,7 +399,7 @@ struct OutputScreen: View {
     }
     
     private func updatePhotostrip() {
-        photostrip = viewModel.createPhotoStrip(from: filteredImages, isDarkFrame: isDarkFrame)
+        photostrip = viewModel.createPhotoStrip(from: filteredImages, frameColor: selectedFrameColor)
     }
 }
 
