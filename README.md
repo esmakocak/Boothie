@@ -9,17 +9,18 @@ Designed with simplicity, elegance, and fun in mind – now available on the App
 * **GeometryReader**: Handles adaptive layouts for iPhone and iPad
 * **Settings**: Countdown timer, date display, live filters, save to gallery
 
-[![Download on the App Store](https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg)](https://apps.apple.com/app/id6744557942?platform=iphone)
-
-![ok](https://github.com/user-attachments/assets/9eefa6f9-44f3-4cff-91b3-99cf14336359)
-
-
-
 ### ✨ 🛠️  Updates: 
-*  Added **front/back camera switch** functionality
-*  Enabled **flash support** for both front and back cameras.
-*  Implement **share** options.
+* Added **front/back camera switch** functionality
+* Enabled **flash support** for both front and back cameras.
+* Implement **share** options.
 * Introduced **new filters and frames** to enhance creativity
 * Improved **filter and frame selection** UI for a smoother editing experience.
 
-<img width="2275" height="1625" alt="SAVE" src="https://github.com/user-attachments/assets/84367421-f6b4-472f-883f-5858250dc237" />
+[![Download on the App Store](https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg)](https://apps.apple.com/app/id6744557942?platform=iphone)
+
+
+<img width="2925" height="1755" alt="4" src="https://github.com/user-attachments/assets/587e53e5-ea2f-48b1-8fe2-b194c6f8b7a4" />
+
+
+<img width="2275" height="1625" alt="3" src="https://github.com/user-attachments/assets/00c6162a-f45e-4b9d-917a-d58a842c7d75" />
+
