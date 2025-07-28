@@ -18,6 +18,7 @@ Designed with simplicity, elegance, and fun in mind – now available on the App
 ### ✨ 🛠️  Updates: 
 *  Added **front/back camera switch** functionality
 *  Enabled **flash support** for both front and back cameras.
+*  Implement **share** options.
 * Introduced **new filters and frames** to enhance creativity
 * Improved **filter and frame selection** UI for a smoother editing experience.
 
